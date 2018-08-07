@@ -72,6 +72,7 @@ www.github.com/emilk/configuru
 #include <type_traits>
 #include <utility>
 #include <vector>
+#include <iostream>
 
 #ifndef CONFIGURU_ONERROR
 	#define CONFIGURU_ONERROR(message_str) \
@@ -101,7 +102,7 @@ www.github.com/emilk/configuru
 
 #ifndef CONFIGURU_IMPLICIT_CONVERSIONS
 	/// Set to 1 to allow  `int x = some_cfg,`
-	#define CONFIGURU_IMPLICIT_CONVERSIONS 0
+	#define CONFIGURU_IMPLICIT_CONVERSIONS 1
 #endif
 
 #ifndef CONFIGURU_VALUE_SEMANTICS
@@ -109,6 +110,17 @@ www.github.com/emilk/configuru
 	/// If 0, all copies of objects and array are shallow (ref-counted).
 	#define CONFIGURU_VALUE_SEMANTICS 0
 #endif
+
+#ifndef CONFIGURU_WITH_EIGEN
+	/// Set to 1 to allow some convenience casts like Eigen::Vector2f x = Eigen::Vector2f(cfg["vec"])
+	#define CONFIGURU_WITH_EIGEN 1
+#endif
+#if CONFIGURU_WITH_EIGEN
+	#include <Eigen/Core>
+#endif
+
+
+
 
 #undef Bool // Needed on Ubuntu 14.04 with GCC 4.8.5
 #undef check // Needed on OSX
@@ -192,6 +204,18 @@ namespace configuru
 		}
 		```
 	*/
+
+	// namespace configuru {
+	// 	template<>
+	// 	inline Vector2f as(const Config& config)
+	// 	{
+	// 		auto&& array = config.as_array();
+	// 		config.check(array.size() == 2, "Expected Vector2f");
+	// 		return {(float)array[0], (float)array[1]};
+	// 	}
+	// }
+
+
 	template<typename T>
 	inline T as(const configuru::Config& config);
 
@@ -435,6 +459,53 @@ namespace configuru
 			check(array.size() == 2u, "Mismatched array length.");
 			return {(Left)array[0], (Right)array[1]};
 		}
+
+		//my convenience ones
+		#if CONFIGURU_WITH_EIGEN
+
+			template<typename T>
+			operator Eigen::Matrix< T , 2 , 1>() const
+			{
+			    const auto& array = as_array();
+			    check(array.size() == 2, "Expected vector of 2 elements");
+				Eigen::Matrix< T , 2 , 1> vec;
+				vec << (T)array[0], (T)array[1];
+			    return vec;
+			}
+
+
+
+		#endif
+
+		// template<>
+	    // inline Eigen::Affine3f as(const configuru::Config& config)
+	    // {
+	    //     auto&& array = config.as_array();
+	    //     if(array.size()!= 12 && array.size()!=16){
+	    //         config.on_error("Expected matrix of size 3x4 or 4x4");
+	    //     }
+        //
+	    //     //if we have 16 elements, the last 4 of them should be row containing 0,0,0,1
+	    //     if(array.size()==16){
+	    //         bool bad=false;
+	    //         bad |= array[12]!=0.0;
+	    //         bad |= array[13]!=0.0;
+	    //         bad |= array[14]!=0.0;
+	    //         bad |= array[15]!=1.0;
+	    //         if(bad){
+	    //             std::cout << " last row is "<< array[12] << " " << array[13] << " " << array[14] << " " << array[15] << '\n';
+	    //             config.on_error("For an affine matrix of size 4x4 the last row should be 0,0,0,1");
+	    //         }
+	    //     }
+        //
+	    //     Eigen::Affine3f mat;
+	    //     mat.matrix()<< (float)array[0], (float)array[1], (float)array[2], (float)array[3],
+	    //     (float)array[4], (float)array[5], (float)array[6], (float)array[7],
+	    //     (float)array[8], (float)array[9], (float)array[10], (float)array[11];
+	    //     return mat;
+	    //     // return {(float)array[0], (float)array[1]};
+	    // }
+
 #else
 		/// Explicit casting, since C++ handles implicit casts real badly.
 		template<typename T>
@@ -475,6 +546,31 @@ namespace configuru
 			check(array.size() == 2u, "Mismatched array length.");
 			return {static_cast<Left>(array[0]), static_cast<Right>(array[1])};
 		}
+
+
+		//my convenience ones
+	// #if CONFIGURU_WITH_EIGEN
+		// template<typename T>
+	    // explicit operator Eigen::Matrix< T , 2 , 1>() const
+	    // {
+	    //     const auto& array = as_array();
+	    //     check(array.size() == 2, "Expected vector of 2 elements");
+		// 	Eigen::Matrix< T , 2 , 1> vec;
+		// 	vec << (T)array[0], (T)array[1];
+	    //     return vec;
+	    // }
+
+
+	    // operator Eigen::Matrix< float , 2 , 1>() const
+	    // {
+	    //     const auto& array = as_array();
+	    //     check(array.size() == 2, "Expected vector of 2 elements");
+		// 	Eigen::Matrix< float , 2 , 1> vec;
+		// 	vec << (float)array[0], (float)array[1];
+	    //     return vec;
+	    // }
+	// #endif
+
 #endif
 
 		const std::string& as_string() const { assert_type(String); return *_u.str; }
