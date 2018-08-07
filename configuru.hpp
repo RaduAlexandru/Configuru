@@ -87,7 +87,7 @@ www.github.com/emilk/configuru
 #ifndef CONFIGURU_ON_DANGLING
 	/// CONFIGURU_ON_DANGLING(message_str) is called by check_dangling() if there is any unaccessed keys.
 	#define CONFIGURU_ON_DANGLING(message_str) \
-		CONFIGURU_ONERROR(message_str)
+		LOG(WARNING) << message_str;
 #endif // CONFIGURU_ON_DANGLING
 
 #ifdef __GNUC__
@@ -117,6 +117,15 @@ www.github.com/emilk/configuru
 #endif
 #if CONFIGURU_WITH_EIGEN
 	#include <Eigen/Core>
+#endif
+
+//include also loguru if possible
+#ifndef CONFIGURU_WITH_LOGURU
+	/// Set to 1 to allow some messages to be posted through loguru
+	#define CONFIGURU_WITH_LOGURU 1
+#endif
+#if CONFIGURU_WITH_LOGURU
+	#include <loguru.hpp>
 #endif
 
 
@@ -471,6 +480,45 @@ namespace configuru
 				Eigen::Matrix< T , 2 , 1> vec;
 				vec << (T)array[0], (T)array[1];
 			    return vec;
+			}
+
+			template<typename T>
+			operator Eigen::Matrix< T , 3 , 3>() const
+			{
+				const auto& array = as_array();
+				check(array.size() == 9, "Expected matrix of 9 elements");
+				Eigen::Matrix< T , 3 , 3> mat;
+				mat << (T)array[0], (T)array[1], (T)array[2],
+				(T)array[3], (T)array[4], (T)array[5],
+				(T)array[6], (T)array[7], (T)array[8];
+				return mat;
+			}
+
+			template<typename T>
+			operator Eigen::Transform<T,3,Eigen::Affine>() const
+			{
+			    const auto& array = as_array();
+			    if(array.size()!= 12 && array.size()!=16){
+			        on_error("Expected matrix of size 3x4 or 4x4");
+			    }
+
+			    //if we have 16 elements, the last 4 of them should be row containing 0,0,0,1
+			    if(array.size()==16){
+			        bool bad=false;
+			        bad |= (T)array[12]!=0.0;
+			        bad |= (T)array[13]!=0.0;
+			        bad |= (T)array[14]!=0.0;
+			        bad |= (T)array[15]!=1.0;
+			        if(bad){
+			            on_error("For an affine matrix of size 4x4 the last row should be 0,0,0,1");
+			        }
+			    }
+
+			    Eigen::Affine3f mat;
+			    mat.matrix()<< (float)array[0], (float)array[1], (float)array[2], (float)array[3],
+			    (float)array[4], (float)array[5], (float)array[6], (float)array[7],
+			    (float)array[8], (float)array[9], (float)array[10], (float)array[11];
+			    return mat;
 			}
 
 
@@ -1074,7 +1122,7 @@ namespace configuru
 		/// multiple spaces or an empty string.
 		/// An empty string means the output will be compact.
 		std::string indentation              = "\t";
-		bool        enforce_indentation      = true;  ///< Must have correct indentation?
+		bool        enforce_indentation      = false;  ///< Must have correct indentation?
 		bool        end_with_newline         = true;  ///< End each file with a newline (unless compact).
 
 		// Top file:
@@ -1226,7 +1274,7 @@ namespace configuru
 		options.omit_colon_before_object = true;
 		options.object_omit_comma        = true;
 		options.object_trailing_comma    = true;
-		options.object_duplicate_keys    = true;
+		options.object_duplicate_keys    = false;
 
 		// Strings
 		options.str_csharp_verbatim      = true;
