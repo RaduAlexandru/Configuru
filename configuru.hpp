@@ -112,7 +112,7 @@ www.github.com/emilk/configuru
 #endif
 
 #ifndef CONFIGURU_WITH_EIGEN
-	/// Set to 1 to allow some convenience casts like Eigen::Vector2f x = Eigen::Vector2f(cfg["vec"])
+	/// Set to 1 to allow some convenience casts like Eigen::Vector2f x = cfg["vec"])
 	#define CONFIGURU_WITH_EIGEN 1
 #endif
 #if CONFIGURU_WITH_EIGEN
@@ -461,6 +461,11 @@ namespace configuru
 
 		/// Convenience conversion of an array of length 2 to an std::pair.
 		/// TODO: generalize for tuples.
+		// operator std::string() const{
+		// 	const auto string = as_string();
+		// 	return string;
+		// }
+
 		template<typename Left, typename Right>
 		operator std::pair<Left, Right>() const
 		{
@@ -1151,7 +1156,7 @@ namespace configuru
 		bool        identifiers_keys         = true;  ///< { is_this_ok: true }
 		bool        object_separator_equal   = false; ///< { "is_this_ok" = true }
 		bool        allow_space_before_colon = false; ///< { "is_this_ok" : true }
-		bool        omit_colon_before_object = false; ///< { "nested_object" { } }
+		bool        omit_colon_before_object = true; ///< { "nested_object" { } }
 		bool        object_omit_comma        = true;  ///< Allow {a:1 b:2}
 		bool        object_trailing_comma    = true;  ///< Allow {a:1, b:2,}
 		bool        object_duplicate_keys    = false; ///< Allow {"a":1, "a":2}
