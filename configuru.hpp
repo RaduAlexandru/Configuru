@@ -116,7 +116,7 @@ www.github.com/emilk/configuru
 	#define CONFIGURU_WITH_EIGEN 1
 #endif
 #if CONFIGURU_WITH_EIGEN
-	#include <Eigen/Core>
+	#include <Eigen/Geometry>
 #endif
 
 //include also loguru if possible
