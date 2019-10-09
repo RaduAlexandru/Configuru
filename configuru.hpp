@@ -487,6 +487,16 @@ namespace configuru
 			    return vec;
 			}
 
+            template<typename T>
+			operator Eigen::Matrix< T , 3 , 1>() const
+			{
+			    const auto& array = as_array();
+			    check(array.size() == 3, "Expected vector of 3 elements");
+				Eigen::Matrix< T , 3 , 1> vec;
+				vec << (T)array[0], (T)array[1], (T)array[2];
+			    return vec;
+			}
+
 			template<typename T>
 			operator Eigen::Matrix< T , 3 , 3>() const
 			{
