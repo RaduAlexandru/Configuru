@@ -795,6 +795,34 @@ namespace configuru
 		template<typename T>
 		T get_or(const std::string& key, const T& default_value) const;
 
+        /// Look for the given key in this object, and return values from default config file on failure.
+		// template<typename T>
+		const Config& get_or(const std::string& key, const Config& default_config) const;
+		// T get_or(const std::string& key, const Config& default_config) const;
+		// const Config& get_or(const std::string& key, const Config& default_config) const;
+        // const Config& get_or(const std::string& key, const Config& default_config) const{
+        //     auto&& object = as_object()._impl;
+        //     auto it = object.find(key);
+        //     if (it == object.end()) {
+        //         //get the value of the key from the default_config
+        //         auto&& default_object = default_config.as_object()._impl;
+        //         auto default_it = default_object.find(key);
+        //         if (default_it == default_object.end()) {
+        //             on_error("Key '" + key + "' not found in current configuration and also not in default configuration");
+        //         } else {
+        //             const auto& entry = default_it->second;
+        //             entry._accessed = true;
+        //             return entry._value;
+        //         }
+
+        //     } else {
+        //         const auto& entry = it->second;
+        //         entry._accessed = true;
+        //         // return as<T>(entry._value);
+        //         return entry._value;
+        //     }
+        // }
+
 		/// Look for the given key in this object, and return default_value on failure.
 		std::string get_or(const std::string& key, const char* default_value) const
 		{
@@ -829,7 +857,7 @@ namespace configuru
             return val;
         }
 
-        Eigen::Vector3f try_eigenv3_else_nan(const std::string& key) const{
+        Eigen::Vector3f get_eigenv3_else_nan(const std::string& key) const{
             // tries to parse the cfg as a eigen::Vector3f, if it doesn't work, return a signaling nan
             Eigen::Vector3f vec;
             try{
@@ -848,6 +876,36 @@ namespace configuru
             }
             return vec;
 
+        }
+
+
+        Eigen::Vector3f get_eigenv3_else_default_else_nan(const std::string& key, const  Config& default_config) const{
+            // tries to parse the cfg as a eigen::Vector3f, if it doesn't work, return a signaling nan
+            Eigen::Vector3f vec;
+            try{
+                vec=(*this)[key];
+            }catch(std::runtime_error& e){
+
+                //try to get it from the default config 
+                return default_config.get_eigenv3_else_nan(key);
+            }
+            return vec;
+
+        }
+
+
+        float get_float_else_default_else_nan(const std::string& key, const Config& default_config) const{
+            // tries to parse the cfg as a float, if it doesn't work, return a signaling nan
+            float val;
+            try{
+                val=(*this)[key];
+            }catch(std::runtime_error& e){
+
+                //try to get the value from the default config 
+                return default_config.get_float_else_nan(key);
+
+            }
+            return val;
         }
 
 		// --------------------------------------------------------------------------------
@@ -1070,6 +1128,33 @@ namespace configuru
 			const auto& entry = it->second;
 			entry._accessed = true;
 			return as<T>(entry._value);
+		}
+	}
+
+    // template<typename T>
+	// T Config::get_or(const std::string& key, const Config& default_config) const
+	inline const Config& Config::get_or(const std::string& key, const Config& default_config) const
+	{
+		auto&& object = as_object()._impl;
+		auto it = object.find(key);
+		if (it == object.end()) {
+            //get the value of the key from the default_config
+            auto&& default_object = default_config.as_object()._impl;
+            auto default_it = default_object.find(key);
+            if (default_it == default_object.end()) {
+                on_error("Key '" + key + "' not found in current configuration and also not in default configuration");
+            } else {
+                const auto& entry = default_it->second;
+                entry._accessed = true;
+                // return as<T>(entry._value);
+                return entry._value;
+            }
+
+		} else {
+			const auto& entry = it->second;
+			entry._accessed = true;
+			// return as<T>(entry._value);
+			return entry._value;
 		}
 	}
 
