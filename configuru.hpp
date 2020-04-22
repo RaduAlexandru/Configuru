@@ -477,23 +477,16 @@ namespace configuru
 		//my convenience ones
 		#if CONFIGURU_WITH_EIGEN
 
-			template<typename T>
-			operator Eigen::Matrix< T , 2 , 1>() const
+            template<typename T,  int N>
+			operator Eigen::Matrix< T , N , 1>() const
 			{
 			    const auto& array = as_array();
-			    check(array.size() == 2, "Expected vector of 2 elements");
-				Eigen::Matrix< T , 2 , 1> vec;
-				vec << (T)array[0], (T)array[1];
-			    return vec;
-			}
-
-            template<typename T>
-			operator Eigen::Matrix< T , 3 , 1>() const
-			{
-			    const auto& array = as_array();
-			    check(array.size() == 3, "Expected vector of 3 elements");
-				Eigen::Matrix< T , 3 , 1> vec;
-				vec << (T)array[0], (T)array[1], (T)array[2];
+                std::string err = "Expected vector of " + std::to_string(N) + " elements";
+			    check(array.size() == N, err.c_str() );
+				Eigen::Matrix< T , N , 1> vec;
+                for (int i=0; i<N; i++){
+                    vec[i] = (T)array[i];
+                }
 			    return vec;
 			}
 
