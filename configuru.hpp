@@ -482,9 +482,12 @@ namespace configuru
 			{
 			    const auto& array = as_array();
                 std::string err = "Expected vector of " + std::to_string(N) + " elements";
-			    check(array.size() == N, err.c_str() );
+                if (N!=-1){ //if it's -1 it means it's a dynamic vector so we don't need to check if -1 is the same array.size()
+                    check(array.size() == N, err.c_str() );
+                }
 				Eigen::Matrix< T , N , 1> vec;
-                for (int i=0; i<N; i++){
+                vec.resize(array.size());
+                for (int i=0; i<array.size(); i++){
                     vec[i] = (T)array[i];
                 }
 			    return vec;
