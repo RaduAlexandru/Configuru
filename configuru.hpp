@@ -838,7 +838,7 @@ namespace configuru
 
         float get_float_else_nan(const std::string& key) const{
             // tries to parse the cfg as a float, if it doesn't work, return a signaling nan
-            float val;
+            float val=-1;
             try{
                 val=(*this)[key];
             }catch(std::runtime_error& e){
